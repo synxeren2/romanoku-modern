@@ -109,7 +109,7 @@ app.get('/', async (req, res) => {
       
     const popular = books ? books.slice(0, 8) : [];
     const latest = books ? shuffle(books).slice(0, 8) : [];
-    const featured = books ? (books.find(b => b.id === 9) || books[0]) : null;
+    const featured = books && books.length > 0 ? (books.find(b => b.id === 9) || books[0]) : null;
     
     res.locals.page = 'home';
     res.render('index', {
