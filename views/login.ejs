@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('partials/head', { title: 'Giriş Yap' }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="auth-page">
+    <div class="auth-box">
+      <a href="/" class="logo" style="justify-content: center;">
+        <div class="logo-icon">R</div>
+        <span class="logo-text">omanOku</span>
+      </a>
+      
+      <h1 class="auth-title">Tekrar <span class="accent">Hoşgeldin</span></h1>
+      <p class="auth-subtitle">Kütüphanene devam etmek için giriş yap</p>
+      
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
+      
+      <form class="auth-form" method="POST" action="/login">
+        <div class="form-group">
+          <label>Kullanıcı Adı</label>
+          <input type="text" name="username" placeholder="kullaniciadi" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Şifre</label>
+          <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">Giriş Yap</button>
+      </form>
+      
+      <p class="auth-footer">Hesabın yok mu? <a href="/register">Kayıt ol</a></p>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('partials/head', { title: 'Profil' }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="book-detail-page">
+    <div class="container">
+      <div class="detail-grid" style="grid-template-columns: 1fr; max-width: 700px; margin: 0 auto;">
+        <div class="detail-info" style="text-align: center; padding: 40px 0;">
+          <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 20px; border-width: 2px;">
+            <%= user.username.charAt(0).toUpperCase() %>
+          </div>
+          <h1 class="detail-title"><%= user.username %></h1>
+          <p class="author" style="margin-bottom: 8px;">Üye since <%= new Date(user.createdAt).toLocaleDateString('tr-TR') %></p>
+          <div class="featured-meta" style="justify-content: center; margin-bottom: 24px;">
+            <div class="meta-item"><span class="value"><%= userBooks.length %></span> eklenen kitap</div>
+          </div>
+          <div class="detail-actions" style="justify-content: center;">
+            <a href="/add-book" class="btn btn-primary">Yeni Kitap Ekle</a>
+            <a href="/logout" class="btn btn-outline">Çıkış Yap</a>
+          </div>
+        </div>
+      </div>
+
+      <% if (userBooks.length) { %>
+        <section class="section">
+          <div class="section-header">
+            <div>
+              <div class="section-label">Eklediklerin</div>
+              <h2 class="section-title">Senin <span class="accent">koleksiyonun</span></h2>
+            </div>
+          </div>
+          <div class="book-grid">
+            <% userBooks.forEach(book => { %>
+              <article class="book-card" style="display: flex; flex-direction: column; height: 100%;">
+                <a href="/book/<%= book.slug %>" class="book-card-link" style="flex: 1;">
+                  <div class="book-cover" style="background: linear-gradient(135deg, <%= book.color %>22, <%= book.color %>44); border-color: <%= book.color %>33;">
+                    <div class="book-cover-inner">
+                      <span class="book-cover-title" style="color: <%= book.color %>;"><%= book.title %></span>
+                      <span class="book-cover-author" style="color: <%= book.color %>;"><%= book.author %></span>
+                    </div>
+                    <div class="book-overlay">
+                      <span class="btn">Oku</span>
+                    </div>
+                  </div>
+                  <div class="book-info">
+                    <h3 class="book-title"><%= book.title %></h3>
+                    <p class="book-author"><%= book.author %></p>
+                    <div class="book-meta">
+                      <span class="book-rating"><span class="star">★</span> <%= book.rating %></span>
+                      <span class="book-tag"><%= book.category %></span>
+                    </div>
+                  </div>
+                </a>
+                <form action="/book/<%= book.slug %>/delete" method="POST" style="margin-top: 12px; width: 100%;" onsubmit="return confirm('Bu kitabı ve kitaba ait tüm bölümleri silmek istediğinize emin misiniz?');">
+                  <button type="submit" class="btn btn-outline" style="width: 100%; padding: 8px 12px; font-size: 0.72rem; border-color: #c85050; color: #c85050; border-radius: var(--radius); transition: var(--transition-fast);" onmouseover="this.style.background='rgba(200,80,80,0.1)';" onmouseout="this.style.background='transparent';">Kitabı Sil</button>
+                </form>
+              </article>
+            <% }) %>
+          </div>
+        </section>
+      <% } else { %>
+        <section class="section">
+          <div class="empty-state">
+            <p>Henüz kitap eklemedin.</p>
+            <a href="/add-book" class="btn btn-primary" style="margin-top: 20px;">İlk Kitabını Ekle</a>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

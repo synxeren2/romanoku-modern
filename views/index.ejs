@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('partials/head', { title: 'Ücretsiz Roman Oku ve İndir' }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="stars-bg" id="starsBg"></div>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Haftanın Seçimi
+          </div>
+          <h1 class="hero-title">
+            Binlerce <span class="accent">Roman</span><br>
+            Ücretsiz Oku & İndir
+          </h1>
+          <p class="hero-desc">Klasiklerden modern eserlere, tarihi romandan bilim kurguya kadar geniş kütüphanemizde istediğiniz romanı bulun. Online okuyun veya cihazınıza indirin.</p>
+          <div class="hero-buttons">
+            <a href="/books" class="btn btn-primary">Keşfetmeye Başla</a>
+            <a href="/books?sort=popular" class="btn btn-outline">Popülerler</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="stat-value">5.200+</div>
+              <div class="stat-label">Roman</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">850+</div>
+              <div class="stat-label">Yazar</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">12+</div>
+              <div class="stat-label">Kategori</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-planet">
+            <span class="planet-title">1984</span>
+            <span class="planet-sub">George Orwell</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popüler -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-label">Editörün Önerisi</div>
+            <h2 class="section-title">Popüler <span class="accent">Romanlar</span></h2>
+          </div>
+          <a href="/books" class="section-link">Tümünü Gör →</a>
+        </div>
+        <div class="book-grid">
+          <% popular.slice(0, 6).forEach(book => { %>
+            <article class="book-card">
+              <a href="/book/<%= book.slug %>" class="book-card-link">
+                <div class="book-cover" style="background: linear-gradient(135deg, <%= book.color %>22, <%= book.color %>44); border-color: <%= book.color %>33;">
+                  <div class="book-cover-inner">
+                    <span class="book-cover-title" style="color: <%= book.color %>;"><%= book.title %></span>
+                    <span class="book-cover-author" style="color: <%= book.color %>;"><%= book.author %></span>
+                  </div>
+                  <div class="book-overlay">
+                    <span class="btn">Oku</span>
+                  </div>
+                </div>
+                <div class="book-info">
+                  <h3 class="book-title"><%= book.title %></h3>
+                  <p class="book-author"><%= book.author %></p>
+                  <div class="book-meta">
+                    <span class="book-rating"><span class="star">★</span> <%= book.rating %></span>
+                    <span class="book-tag"><%= book.category %></span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kategoriler -->
+    <section class="section section-divider">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-label">Türler</div>
+            <h2 class="section-title"><span class="accent">Kategoriler</span></h2>
+          </div>
+        </div>
+        <div class="category-grid">
+          <% const catIcons = {
+            'Klasik': '✦', 'Bilim Kurgu': '✦', 'Polisiye': '✦', 'Tarihi': '✦',
+            'Romantik': '✦', 'Fantastik': '✦', 'Macera': '✦', 'Korku': '✦',
+            'Çocuk': '✦', 'Edebi': '✦'
+          }; %>
+          <% categories.forEach(cat => { %>
+            <a href="/books?category=<%= encodeURIComponent(cat.name) %>" class="category-card">
+              <div class="category-icon"><%= catIcons[cat.name] || '✦' %></div>
+              <div class="category-info">
+                <h4><%= cat.name %></h4>
+                <p><%= cat.count.toLocaleString('tr-TR') %> roman</p>
+              </div>
+              <span class="category-arrow">→</span>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <!-- Son Eklenenler -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-label">Yeni</div>
+            <h2 class="section-title">Son <span class="accent">Eklenenler</span></h2>
+          </div>
+          <a href="/books?sort=newest" class="section-link">Tümünü Gör →</a>
+        </div>
+        <div class="book-grid">
+          <% latest.slice(0, 6).forEach(book => { %>
+            <article class="book-card">
+              <a href="/book/<%= book.slug %>" class="book-card-link">
+                <div class="book-cover" style="background: linear-gradient(135deg, <%= book.color %>22, <%= book.color %>44); border-color: <%= book.color %>33;">
+                  <div class="book-cover-inner">
+                    <span class="book-cover-title" style="color: <%= book.color %>;"><%= book.title %></span>
+                    <span class="book-cover-author" style="color: <%= book.color %>;"><%= book.author %></span>
+                  </div>
+                  <div class="book-overlay">
+                    <span class="btn">Oku</span>
+                  </div>
+                </div>
+                <div class="book-info">
+                  <h3 class="book-title"><%= book.title %></h3>
+                  <p class="book-author"><%= book.author %></p>
+                  <div class="book-meta">
+                    <span class="book-rating"><span class="star">★</span> <%= book.rating %></span>
+                    <span class="book-tag"><%= book.category %></span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <!-- Editör Seçimi -->
+    <section class="section section-divider">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-label">Özel</div>
+            <h2 class="section-title">Editörün <span class="accent">Seçimi</span></h2>
+          </div>
+        </div>
+        <div class="featured-book">
+          <div class="featured-cover" style="background: linear-gradient(135deg, <%= featured.color %>, <%= featured.color %>cc);">
+            <div class="featured-cover-inner">
+              <span class="featured-cover-title"><%= featured.title %></span>
+              <span class="featured-cover-author"><%= featured.author %></span>
+            </div>
+          </div>
+          <div class="featured-info">
+            <div class="badge-row">
+              <span class="badge badge-accent"><%= featured.category %></span>
+              <span class="badge badge-secondary"><%= featured.year %></span>
+              <span class="badge badge-secondary"><%= featured.pages %> sayfa</span>
+            </div>
+            <h2 class="featured-title"><%= featured.title %></h2>
+            <p class="author"><%= featured.author %></p>
+            <p class="desc"><%= featured.desc %></p>
+            <div class="featured-meta">
+              <div class="meta-item"><span class="value">★</span> <%= featured.rating %> Puan</div>
+              <div class="meta-item"><span class="value">◉</span> <%= (featured.reads / 1000).toFixed(1) %>K okunma</div>
+              <div class="meta-item"><span class="value">↓</span> <%= (featured.downloads / 1000).toFixed(1) %>K indirme</div>
+            </div>
+            <div class="featured-actions">
+              <a href="/read/<%= featured.slug %>" class="btn btn-primary">Hemen Oku</a>
+              <% if (featured.pdfFile) { %>
+                <a href="/download/<%= featured.slug %>/pdf" class="btn btn-outline">PDF İndir</a>
+              <% } %>
+              <% if (featured.epubFile) { %>
+                <a href="/download/<%= featured.slug %>/epub" class="btn btn-outline">EPUB İndir</a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section cta-section">
+      <div class="container">
+        <div class="cta-box">
+          <div class="cta-content">
+            <h3 class="cta-title">Bugün okumaya başlayın</h3>
+            <p class="cta-desc">5.200+ ücretsiz roman, hiçbir üyelik gerektirmeden.</p>
+          </div>
+          <a href="/books" class="btn btn-primary">Kütüphaneyi Keşfet</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

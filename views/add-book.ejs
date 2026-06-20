@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('partials/head', { title: 'Kitap Ekle' }) %>
+  <style>
+    .upload-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      background: rgba(12, 12, 24, 0.4);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-dropzone:hover, .upload-dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(107, 140, 206, 0.06);
+      box-shadow: 0 0 24px var(--accent-glow-strong);
+    }
+    .dropzone-icon {
+      font-size: 3.5rem;
+      color: var(--accent-bright);
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: float 4s ease-in-out infinite;
+    }
+    .dropzone-text {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .dropzone-sub {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+    .processing-screen {
+      text-align: center;
+      padding: 48px 24px;
+      background: rgba(12, 12, 24, 0.4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+    .cosmic-spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-bright);
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      animation: spin 1.2s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+      box-shadow: 0 0 20px var(--accent-glow-strong);
+      position: relative;
+    }
+    .cosmic-spinner::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 2px solid transparent;
+      border-bottom-color: var(--accent-dim);
+      border-radius: 50%;
+      animation: spin 2.4s linear infinite reverse;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .processing-title {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+    .processing-status {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--accent-bright);
+      letter-spacing: 0.5px;
+    }
+    .color-presets {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .color-preset {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow);
+    }
+    .color-preset:hover {
+      transform: scale(1.15);
+    }
+    .color-preset.active {
+      border-color: var(--text);
+      box-shadow: 0 0 10px var(--accent-bright);
+    }
+    .metadata-form-fields {
+      animation: slideDown 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="add-book-page">
+    <div class="container">
+      <div class="add-book-form">
+        <h1 class="form-title">Yeni <span class="accent">Kitap</span> Ekle</h1>
+        <p class="form-subtitle">PDF veya EPUB dosyanızı yükleyin, gerisini biz halledelim</p>
+        
+        <% if (error) { %>
+          <div class="alert alert-error" id="serverErrorAlert"><%= error %></div>
+        <% } %>
+        
+        <div class="alert alert-error" id="jsErrorAlert" style="display: none;"></div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="upload-dropzone" id="dropzone">
+          <span class="dropzone-icon">✦</span>
+          <p class="dropzone-text">Dosyayı buraya sürükleyin veya seçmek için tıklayın</p>
+          <span class="dropzone-sub">Yalnızca PDF ve EPUB (Maks. 50MB)</span>
+          <input type="file" id="bookFile" accept=".pdf,.epub" style="display: none;">
+        </div>
+
+        <!-- Yükleme / Analiz Animasyonu -->
+        <div class="processing-screen" id="processingScreen" style="display: none;">
+          <div class="cosmic-spinner"></div>
+          <h3 class="processing-title">Kitap Analiz Ediliyor</h3>
+          <p class="processing-status" id="processingStatus">Dosya sunucuya gönderiliyor...</p>
+        </div>
+
+        <!-- Form Fields (Parsed Metadata) -->
+        <form method="POST" action="/add-book" id="saveBookForm">
+          <input type="hidden" name="filePath" id="filePathInput">
+          <input type="hidden" name="fileType" id="fileTypeInput">
+
+          <div class="metadata-form-fields" id="metadataFields" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Kitap Adı *</label>
+                <input type="text" name="title" id="titleInput" placeholder="Örn: Suç ve Ceza" required>
+              </div>
+              <div class="form-group">
+                <label>Yazar *</label>
+                <input type="text" name="author" id="authorInput" placeholder="Örn: Fyodor Dostoyevski" required>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Kategori *</label>
+                <select name="category" required>
+                  <option value="">Kategori seç</option>
+                  <option>Klasik</option>
+                  <option>Bilim Kurgu</option>
+                  <option>Polisiye</option>
+                  <option>Tarihi</option>
+                  <option>Romantik</option>
+                  <option>Fantastik</option>
+                  <option>Macera</option>
+                  <option>Korku</option>
+                  <option>Çocuk</option>
+                  <option>Edebi</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Yayın Yılı *</label>
+                <input type="number" name="year" id="yearInput" placeholder="Örn: 1866" required min="1000" max="2100">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Sayfa Sayısı (Bölüm Adedi) *</label>
+                <input type="number" name="pages" id="pagesInput" placeholder="Örn: 672" required min="1">
+              </div>
+              <div class="form-group">
+                <label>Kapak Rengi</label>
+                <input type="text" name="color" id="colorInput" placeholder="#6b8cce" value="#6b8cce">
+                
+                <div class="color-presets">
+                  <span class="color-preset active" data-color="#6b8cce" style="background: #6b8cce;"></span>
+                  <span class="color-preset" data-color="#5a308c" style="background: #5a308c;"></span>
+                  <span class="color-preset" data-color="#1b2a4a" style="background: #1b2a4a;"></span>
+                  <span class="color-preset" data-color="#1b4d3e" style="background: #1b4d3e;"></span>
+                  <span class="color-preset" data-color="#803000" style="background: #803000;"></span>
+                  <span class="color-preset" data-color="#7a1a00" style="background: #7a1a00;"></span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Açıklama</label>
+              <textarea name="desc" id="descInput" placeholder="Kitap hakkında kısa bir açıklama..." rows="4"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Kitabı Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const bookFileInput = document.getElementById('bookFile');
+    const processingScreen = document.getElementById('processingScreen');
+    const processingStatus = document.getElementById('processingStatus');
+    const metadataFields = document.getElementById('metadataFields');
+    const jsErrorAlert = document.getElementById('jsErrorAlert');
+    const serverErrorAlert = document.getElementById('serverErrorAlert');
+
+    // Trigger file input
+    dropzone.addEventListener('click', () => {
+      bookFileInput.click();
+    });
+
+    // Drag-and-drop actions
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        bookFileInput.files = files;
+        handleFile(files[0]);
+      }
+    });
+
+    bookFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      // Hide error alerts
+      jsErrorAlert.style.display = 'none';
+      if (serverErrorAlert) serverErrorAlert.style.display = 'none';
+      metadataFields.style.display = 'none';
+      
+      // Show loader
+      processingScreen.style.display = 'block';
+      processingStatus.textContent = 'Dosya sunucuya yükleniyor...';
+      
+      const formData = new FormData();
+      formData.append('bookFile', file);
+      
+      // Dynamic loading updates for premium UX
+      let statusCounter = 0;
+      const statusUpdates = [
+        'Dosya sunucuya gönderiliyor...',
+        'Dosya sunucuya başarıyla yüklendi.',
+        'Metinler ve sayfa yapısı analiz ediliyor...',
+        'Yazar, Başlık ve Yıl bilgileri taranıyor...',
+        'Sayfa / Bölüm indeksleri oluşturuluyor...'
+      ];
+      
+      let statusInterval = setInterval(() => {
+        if (statusCounter < statusUpdates.length - 1) {
+          statusCounter++;
+          processingStatus.textContent = statusUpdates[statusCounter];
+        }
+      }, 2000);
+      
+      fetch('/add-book/parse', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => {
+        clearInterval(statusInterval);
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.error || 'Dosya çözümlenirken bir hata meydana geldi.');
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        processingScreen.style.display = 'none';
+        
+        if (data.success) {
+          // Fill form fields
+          document.getElementById('titleInput').value = data.metadata.title || '';
+          document.getElementById('authorInput').value = data.metadata.author || '';
+          document.getElementById('yearInput').value = data.metadata.year || '';
+          document.getElementById('pagesInput').value = data.metadata.pages || '';
+          document.getElementById('filePathInput').value = data.file.path || '';
+          document.getElementById('fileTypeInput').value = data.file.type || '';
+          
+          // Smooth slide down transition
+          metadataFields.style.display = 'block';
+        }
+      })
+      .catch(err => {
+        clearInterval(statusInterval);
+        processingScreen.style.display = 'none';
+        jsErrorAlert.textContent = err.message;
+        jsErrorAlert.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // Color presets handler
+    const presets = document.querySelectorAll('.color-preset');
+    const colorInput = document.getElementById('colorInput');
+
+    presets.forEach(preset => {
+      preset.addEventListener('click', (e) => {
+        presets.forEach(p => p.classList.remove('active'));
+        preset.classList.add('active');
+        colorInput.value = preset.getAttribute('data-color');
+      });
+    });
+
+    colorInput.addEventListener('input', () => {
+      const currentVal = colorInput.value.trim().toLowerCase();
+      presets.forEach(preset => {
+        const presetColor = preset.getAttribute('data-color').toLowerCase();
+        if (presetColor === currentVal) {
+          preset.classList.add('active');
+        } else {
+          preset.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

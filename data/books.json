@@ -1,0 +1,361 @@
+[
+  {
+    "id": 1,
+    "slug": "suc-ve-ceza",
+    "title": "Suç ve Ceza",
+    "author": "Fyodor Dostoyevski",
+    "category": "Klasik",
+    "rating": 4.9,
+    "reads": 32500,
+    "downloads": 8400,
+    "year": 1866,
+    "pages": 672,
+    "desc": "Yoksul bir hukuk öğrencisi olan Rodion Raskolnikov, kendini 'olağanüstü insan' olarak görür ve toplumun yararına olduğunu düşündüğü bir cinayet işler. Cinayetten sonra vicdan azabı, paranoya ve yalnızlık onu yavaş yavaş tüketir. Dostoyevski'nin başyapıtı, psikolojik derinliği ve felsefi zenginliğiyle edebiyat tarihinin en etkileyici eserlerinden biridir.",
+    "chapters": [
+      "Bölüm 1 - Yoksul",
+      "Bölüm 2 - Çıkmaz",
+      "Bölüm 3 - İtiraf",
+      "Bölüm 4 - Kefaret"
+    ],
+    "color": "#6b8cce"
+  },
+  {
+    "id": 2,
+    "slug": "insan-ne-ile-yasar",
+    "title": "İnsan Ne İle Yaşar",
+    "author": "Lev Tolstoy",
+    "category": "Klasik",
+    "rating": 4.7,
+    "reads": 18200,
+    "downloads": 5100,
+    "year": 1885,
+    "pages": 128,
+    "desc": "Tolstoy'un en sevilen kısa hikayelerinden biri. Sevgi, inanç ve umut üzerine dokunaklı bir anlatı. İnsanın hayatta tutunmasını sağlayan şeyin maddi zenginlik değil, manevi değerler olduğunu gösteren zamansız bir eser.",
+    "chapters": [
+      "Hikaye 1",
+      "Hikaye 2",
+      "Hikaye 3"
+    ],
+    "color": "#5a7eb8"
+  },
+  {
+    "id": 3,
+    "slug": "sefilller",
+    "title": "Sefiller",
+    "author": "Victor Hugo",
+    "category": "Klasik",
+    "rating": 4.8,
+    "reads": 28100,
+    "downloads": 9200,
+    "year": 1862,
+    "pages": 1232,
+    "desc": "Jean Valjean'ın hırsızlıktan başlayan ve kıyamete uzanan destansı hikayesi. Victor Hugo, bu romanda adalet, merhamet ve devrim temalarını işler. 19. yüzyıl Fransası'nın panoramik bir tablosunu çizen devasa bir başyapıt.",
+    "chapters": [
+      "Fantine",
+      "Cosette",
+      "Marius",
+      "Kıyamet"
+    ],
+    "color": "#4a6fa5"
+  },
+  {
+    "id": 4,
+    "slug": "bulbulu-oldurmek",
+    "title": "Bülbülü Öldürmek",
+    "author": "Harper Lee",
+    "category": "Klasik",
+    "rating": 4.6,
+    "reads": 15400,
+    "downloads": 4300,
+    "year": 1960,
+    "pages": 376,
+    "desc": "Atticus Finch ve çocukları Scout ile Jem'in gözünden 1930'lar Alabama'sında ırkçılık, adalet ve masumiyet üzerine bir hikaye. Amerika'nın en çok okunan klasiklerinden biri, derin insanlık dersleri veren bir başyapıt.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2",
+      "Bölüm 3"
+    ],
+    "color": "#7a8fc4"
+  },
+  {
+    "id": 5,
+    "slug": "kucuk-prens",
+    "title": "Küçük Prens",
+    "author": "Antoine de Saint-Exupéry",
+    "category": "Çocuk",
+    "rating": 4.9,
+    "reads": 41200,
+    "downloads": 15600,
+    "year": 1943,
+    "pages": 96,
+    "desc": "Küçük bir gezegenden gelen prensin, yetişkinlerin tuhaf dünyasını keşfetmesi. Masalsı dili ve derin anlamlarıyla tüm yaşlardan okuyucuya hitap eden, aşk, dostluk ve sorumluluk üzerine unutulmaz bir eser.",
+    "chapters": [
+      "Bölüm 1-5",
+      "Bölüm 6-10",
+      "Bölüm 11-15"
+    ],
+    "color": "#5a6b8c"
+  },
+  {
+    "id": 6,
+    "slug": "yuzyillik-yalnizlik",
+    "title": "Yüzyıllık Yalnızlık",
+    "author": "Gabriel García Márquez",
+    "category": "Edebi",
+    "rating": 4.7,
+    "reads": 12800,
+    "downloads": 3800,
+    "year": 1967,
+    "pages": 417,
+    "desc": "Macondo kasabasının ve Buendía ailesinin yedi kuşaklık destansı hikayesi. Büyülü gerçekçilik akımının zirvesi, Latin Amerika edebiyatının en önemli eserlerinden biri. Zaman, yalnızlık ve kader temaları üzerine büyüleyici bir anlatı.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2",
+      "Bölüm 3"
+    ],
+    "color": "#6b7d9c"
+  },
+  {
+    "id": 7,
+    "slug": "donusum",
+    "title": "Dönüşüm",
+    "author": "Franz Kafka",
+    "category": "Klasik",
+    "rating": 4.5,
+    "reads": 9700,
+    "downloads": 3100,
+    "year": 1915,
+    "pages": 94,
+    "desc": "Bir sabah uyandığında dev bir böceğe dönüşen Gregor Samsa'nın trajik hikayesi. Yabancılaşma, aile baskısı ve modern toplumun birey üzerindeki ezici etkisi üzerine absürt ve dokunaklı bir anlatı.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2",
+      "Bölüm 3"
+    ],
+    "color": "#6b8cce"
+  },
+  {
+    "id": 8,
+    "slug": "fahrenheit-451",
+    "title": "Fahrenheit 451",
+    "author": "Ray Bradbury",
+    "category": "Bilim Kurgu",
+    "rating": 4.6,
+    "reads": 14300,
+    "downloads": 5200,
+    "year": 1953,
+    "pages": 158,
+    "desc": "Kitapların yasaklandığı, itfaiyecilerin yangın söndürmek yerine kitap yaktığı bir distopik gelecek. Guy Montag'ın bilgiye ve özgürlüğe olan açlığı, totaliter bir toplumda bireysel direnişin güçlü bir hikayesi.",
+    "chapters": [
+      "Harç ve Ateş",
+      "Elek ve Kum",
+      "Aydınlık ve Gölge"
+    ],
+    "color": "#5a7eb8"
+  },
+  {
+    "id": 9,
+    "slug": "1984",
+    "title": "1984",
+    "author": "George Orwell",
+    "category": "Bilim Kurgu",
+    "rating": 4.9,
+    "reads": 45200,
+    "downloads": 12800,
+    "year": 1949,
+    "pages": 328,
+    "desc": "Distopik edebiyatın başyapıtlarından biri olan 1984, totaliter bir rejimde bireyin özgürlük arayışını anlatır. Winston Smith'in gözünden Big Brother'ın gözetim toplumunu keşfedin. Zihnin kontrol altına alındığı, gerçekliğin yeniden yazıldığı bir dünyada umut ve direnişin hikayesi.",
+    "chapters": [
+      "Bölüm 1 - Büyük Birader",
+      "Bölüm 2 - Julia",
+      "Bölüm 3 - Oda 101"
+    ],
+    "color": "#4a6fa5"
+  },
+  {
+    "id": 10,
+    "slug": "hayvan-ciftligi",
+    "title": "Hayvan Çiftliği",
+    "author": "George Orwell",
+    "category": "Klasik",
+    "rating": 4.7,
+    "reads": 22100,
+    "downloads": 6800,
+    "year": 1945,
+    "pages": 112,
+    "desc": "İnsanlara başkaldıran hayvanların kendi aralarında totaliter bir düzen kurması. Sovyet tarihine alegorik bir eleştiri, iktidarın yozlaşmasını ve propagandayı keskin bir mizahla anlatan zamansız bir hiciv.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2",
+      "Bölüm 3"
+    ],
+    "color": "#7a8fc4"
+  },
+  {
+    "id": 11,
+    "slug": "yabanci",
+    "title": "Yabancı",
+    "author": "Albert Camus",
+    "category": "Klasik",
+    "rating": 4.5,
+    "reads": 11600,
+    "downloads": 3500,
+    "year": 1942,
+    "pages": 123,
+    "desc": "Annesinin cenazesinde ağlayamayan Meursault'un absürt yargılanması. Toplumsal normlara uymayan bir bireyin, varoluşçu bir çerçevede 'öteki' olarak damgalanması. Camus'nun en tanınmış romanı.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2"
+    ],
+    "color": "#5a6b8c"
+  },
+  {
+    "id": 12,
+    "slug": "simyaci",
+    "title": "Simyacı",
+    "author": "Paulo Coelho",
+    "category": "Macera",
+    "rating": 4.4,
+    "reads": 38500,
+    "downloads": 11200,
+    "year": 1988,
+    "pages": 197,
+    "desc": "İspanyol çoban Santiago'nun Mısır piramitlerine yolculuğu. Kişisel efsanenin peşinden gitmenin, evrenin işaretlerini dinlemenin ve rüyaların peşinden koşmanın ilham verici hikayesi. Dünya çapında milyonlarca okura ulaşan bir klasik.",
+    "chapters": [
+      "Bölüm 1",
+      "Bölüm 2",
+      "Bölüm 3"
+    ],
+    "color": "#6b7d9c"
+  },
+  {
+    "id": 13,
+    "slug": "sherlock-holmes",
+    "title": "Sherlock Holmes",
+    "author": "Arthur Conan Doyle",
+    "category": "Polisiye",
+    "rating": 4.8,
+    "reads": 25300,
+    "downloads": 7400,
+    "year": 1892,
+    "pages": 307,
+    "desc": "Dünya edebiyatının en ünlü dedektifi Sherlock Holmes ve sadık arkadaşı Dr. Watson'ın maceraları. Gözlem gücü, mantık ve dedüksiyonla çözülen gizem dolu olaylar. Polisiye türünün kurucu eserleri.",
+    "chapters": [
+      "Kızıl Soruşturma",
+      "Dörtlerin Yemin",
+      "Boscombe Vadisi"
+    ],
+    "color": "#6b8cce"
+  },
+  {
+    "id": 14,
+    "slug": "dracula",
+    "title": "Dracula",
+    "author": "Bram Stoker",
+    "category": "Korku",
+    "rating": 4.3,
+    "reads": 13700,
+    "downloads": 4200,
+    "year": 1897,
+    "pages": 488,
+    "desc": "Transilvanya Kontu Dracula'nın İngiltere'ye gelişi ve arkadaşları tarafından durdurulma çabaları. Vampir mitolojisinin temel taşı, mektup ve günlük formlarıyla anlatılan gothic korku klasiği.",
+    "chapters": [
+      "Jonathan Harker'ın Günlüğü",
+      "Mina'nın Mektupları",
+      "Av"
+    ],
+    "color": "#5a7eb8"
+  },
+  {
+    "id": 15,
+    "slug": "jane-eyre",
+    "title": "Jane Eyre",
+    "author": "Charlotte Brontë",
+    "category": "Romantik",
+    "rating": 4.5,
+    "reads": 8900,
+    "downloads": 2800,
+    "year": 1847,
+    "pages": 500,
+    "desc": "Yoksul ve yetim bir kızın, güçlü karakteri ve ahlaki duruşuyla hayatta tutunma mücadelesi. Mr. Rochester ile olan karmaşık aşkı, bağımsızlık ve öz saygı üzerine 19. yüzyıl İngiltere'sinin en güçlü kadın portrelerinden biri.",
+    "chapters": [
+      "Çocukluk",
+      "Thornfield",
+      "Keşif"
+    ],
+    "color": "#4a6fa5"
+  },
+  {
+    "id": 16,
+    "slug": "yuzuklerin-efendisi",
+    "title": "Yüzüklerin Efendisi",
+    "author": "J.R.R. Tolkien",
+    "category": "Fantastik",
+    "rating": 4.9,
+    "reads": 35600,
+    "downloads": 10200,
+    "year": 1954,
+    "pages": 1178,
+    "desc": "Orta Dünya'da, Karanlık Lord Sauron'un tek yüzüğüne karşı verilen destansı mücadele. Hobbitler, elfler, cüceler ve insanların birlikteliğiyle şekillenen modern fantastik edebiyatın en önemli eseri.",
+    "chapters": [
+      "Yüzük Kardeşliği",
+      "İki Kule",
+      "Kralın Dönüşü"
+    ],
+    "color": "#7a8fc4"
+  },
+  {
+    "id": 1781855662245,
+    "slug": "asdads",
+    "title": "asdads",
+    "author": "adsads",
+    "category": "Bilim Kurgu",
+    "rating": 0,
+    "reads": 0,
+    "downloads": 0,
+    "year": 2005,
+    "pages": 123,
+    "desc": "",
+    "chapters": [
+      "Bölüm 1"
+    ],
+    "color": "#6b8cce"
+  },
+  {
+    "id": 1781857302753,
+    "slug": "asfafs",
+    "title": "asfafs",
+    "author": "afsafsafs",
+    "category": "Romantik",
+    "rating": 0,
+    "reads": 0,
+    "downloads": 0,
+    "year": 2000,
+    "pages": 154,
+    "desc": "asfasfas",
+    "chapters": [
+      "Bölüm 1"
+    ],
+    "color": "#6b8cce"
+  },
+  {
+    "id": 1781950260158,
+    "slug": "hobbit",
+    "title": "Hobbit",
+    "author": "asfasf",
+    "category": "Fantastik",
+    "rating": 0,
+    "reads": 0,
+    "downloads": 0,
+    "year": 1999,
+    "pages": 541,
+    "desc": "",
+    "chapters": [
+      "Bölüm 1"
+    ],
+    "color": "#6b8cce",
+    "addedBy": 1781855635986,
+    "pdfFile": null,
+    "epubFile": "/books/1781950260094-970276618.epub"
+  }
+]

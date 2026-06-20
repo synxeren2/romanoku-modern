@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('partials/head', { title: 'Tüm Romanlar' }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1 class="page-title">Tüm <span class="accent">Romanlar</span></h1>
+        <p class="page-desc">Kütüphanemizdeki <%= books.length %> romanı keşfedin</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filters">
+          <div class="filter-search">
+            <span class="icon">⌕</span>
+            <input type="text" placeholder="Ara..." id="filterInput" value="<%= q %>" oninput="filterBooks()">
+          </div>
+          <select class="filter-select" id="categoryFilter" onchange="filterBooks()">
+            <option value="" <%= !cat ? 'selected' : '' %>>Tüm Kategoriler</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.name %>" <%= cat === c.name ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+          <select class="filter-select" id="sortFilter" onchange="filterBooks()">
+            <option value="popular" <%= sort === 'popular' ? 'selected' : '' %>>En Popüler</option>
+            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>En Yeni</option>
+            <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>>En Yüksek Puan</option>
+            <option value="az" <%= sort === 'az' ? 'selected' : '' %>>A-Z</option>
+          </select>
+        </div>
+
+        <div class="book-grid" id="bookGrid">
+          <% books.forEach(book => { %>
+            <article class="book-card">
+              <a href="/book/<%= book.slug %>" class="book-card-link">
+                <div class="book-cover" style="background: linear-gradient(135deg, <%= book.color %>22, <%= book.color %>44); border-color: <%= book.color %>33;">
+                  <div class="book-cover-inner">
+                    <span class="book-cover-title" style="color: <%= book.color %>;"><%= book.title %></span>
+                    <span class="book-cover-author" style="color: <%= book.color %>;"><%= book.author %></span>
+                  </div>
+                  <div class="book-overlay">
+                    <span class="btn">Oku</span>
+                  </div>
+                </div>
+                <div class="book-info">
+                  <h3 class="book-title"><%= book.title %></h3>
+                  <p class="book-author"><%= book.author %></p>
+                  <div class="book-meta">
+                    <span class="book-rating"><span class="star">★</span> <%= book.rating %></span>
+                    <span class="book-tag"><%= book.category %></span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          <% }) %>
+        </div>
+
+        <% if (books.length === 0) { %>
+          <div class="empty-state">
+            <p>Aramanıza uygun roman bulunamadı.</p>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+  <script>
+    function filterBooks() {
+      const q = document.getElementById('filterInput').value;
+      const cat = document.getElementById('categoryFilter').value;
+      const sort = document.getElementById('sortFilter').value;
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (cat) params.set('category', cat);
+      if (sort) params.set('sort', sort);
+      window.location.href = '/books?' + params.toString();
+    }
+  </script>
+</body>
+</html>

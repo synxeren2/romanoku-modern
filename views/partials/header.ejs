@@ -1,0 +1,49 @@
+<header class="header">
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">R</div>
+      <span class="logo-text">omanOku</span>
+    </a>
+
+    <nav class="nav" id="nav">
+      <a href="/" class="nav-link <%= locals.page === 'home' ? 'active' : '' %>">Ana Sayfa</a>
+      <a href="/books" class="nav-link <%= locals.page === 'books' || locals.page === 'book' ? 'active' : '' %>">Romanlar</a>
+      <a href="/books?category=Klasik" class="nav-link">Kategoriler</a>
+      <a href="/books?sort=newest" class="nav-link">Yeni</a>
+      <% if (locals.isLoggedIn) { %>
+        <a href="/add-book" class="nav-link <%= locals.page === 'add-book' ? 'active' : '' %>">Kitap Ekle</a>
+      <% } %>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle" aria-label="Ara">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+      
+      <% if (locals.isLoggedIn) { %>
+        <a href="/logout" class="auth-btn" title="Çıkış">Çıkış</a>
+        <div class="user-avatar" title="<%= locals.user.username %>" onclick="location.href='/profile'" style="cursor: pointer;"><%= locals.user.username.charAt(0).toUpperCase() %></div>
+      <% } else { %>
+        <a href="/login" class="auth-btn">Giriş</a>
+        <a href="/register" class="auth-btn auth-btn-primary">Kayıt</a>
+      <% } %>
+      
+      <button class="icon-btn menu-btn" id="menuToggle" aria-label="Menü">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-overlay" id="searchOverlay">
+    <div class="container">
+      <div class="search-box">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="search-input" placeholder="Roman, yazar veya kategori ara..." id="searchInput" autocomplete="off">
+        <button class="search-close" id="searchClose" aria-label="Kapat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+</header>
