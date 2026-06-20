@@ -4,23 +4,14 @@ const fs = require('fs');
 const session = require('express-session');
 const crypto = require('crypto');
 const multer = require('multer');
+const { supabase } = require('./lib/supabase');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// ===== STORAGE & PATH SETUP =====
-const STORAGE_DIR = process.env.STORAGE_DIR || __dirname;
-
-// Determine books upload directory (local public/books or volume books)
-const uploadsDir = process.env.STORAGE_DIR 
-  ? path.join(STORAGE_DIR, 'books') 
-  : path.join(__dirname, 'public', 'books');
-
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/books', express.static(uploadsDir));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -31,81 +22,13 @@ app.use(session({
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
-// Determine data directory and paths
-const dataDir = process.env.STORAGE_DIR
-  ? path.join(STORAGE_DIR, 'data')
-  : path.join(__dirname, 'data');
-
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-const booksPath = path.join(dataDir, 'books.json');
-const usersPath = path.join(dataDir, 'users.json');
-const chaptersPath = path.join(dataDir, 'chapters.json');
-
-// Copy default seed data if it doesn't exist in the persistent storage
-const defaultBooksPath = path.join(__dirname, 'data', 'books.json');
-const defaultUsersPath = path.join(__dirname, 'data', 'users.json');
-const defaultChaptersPath = path.join(__dirname, 'data', 'chapters.json');
-
-if (!fs.existsSync(booksPath) && fs.existsSync(defaultBooksPath)) {
-  fs.copyFileSync(defaultBooksPath, booksPath);
-}
-if (!fs.existsSync(usersPath) && fs.existsSync(defaultUsersPath)) {
-  fs.copyFileSync(defaultUsersPath, usersPath);
-}
-if (!fs.existsSync(chaptersPath) && fs.existsSync(defaultChaptersPath)) {
-  fs.copyFileSync(defaultChaptersPath, chaptersPath);
-}
-
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, unique + ext);
-  }
-});
-
+// ===== UPLOAD SETUP (MEMORY) =====
 const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-  fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === '.pdf' || ext === '.epub') {
-      return cb(null, true);
-    }
-    cb(new Error('Sadece PDF ve EPUB dosyaları yüklenebilir.'));
-  }
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
-function loadBooks() {
-  try { return JSON.parse(fs.readFileSync(booksPath, 'utf8')); }
-  catch (e) { return []; }
-}
-
-function saveBooks(books) {
-  fs.writeFileSync(booksPath, JSON.stringify(books, null, 2));
-}
-
-function loadUsers() {
-  try { return JSON.parse(fs.readFileSync(usersPath, 'utf8')); }
-  catch (e) { return []; }
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-}
-
-function loadChapters() {
-  try { return JSON.parse(fs.readFileSync(chaptersPath, 'utf8')); }
-  catch (e) { return {}; }
-}
-
-function saveChapters(chapters) {
-  fs.writeFileSync(chaptersPath, JSON.stringify(chapters, null, 2));
-}
-
+// ===== DATA HELPERS =====
 function hashPassword(pw) {
   return crypto.createHash('sha256').update(pw).digest('hex');
 }
@@ -121,36 +44,53 @@ function slugify(str) {
     .replace(/--+/g, '-');
 }
 
-let books = loadBooks();
-let users = loadUsers();
-let chapters = loadChapters();
-
-if (!users.length) saveUsers([]);
-if (!Object.keys(chapters).length) saveChapters({});
-
-function updateBooks() { books = loadBooks(); }
-function updateChapters() { chapters = loadChapters(); }
-
-function shuffle(arr) { return [...arr].sort(() => 0.5 - Math.random()); }
-
-function getCategories() {
-  return [...new Set(books.map(b => b.category))].map(cat => {
-    const count = books.filter(b => b.category === cat).length;
-    return { name: cat, count };
-  });
+function shuffle(arr) {
+  return [...arr].sort(() => 0.5 - Math.random());
 }
 
-function getUser(req) {
+async function getUser(req) {
   if (!req.session || !req.session.userId) return null;
-  return users.find(u => u.id === req.session.userId);
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.session.userId)
+      .single();
+    if (error || !data) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getCategories() {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('category');
+    if (error || !data) return [];
+    const categories = data.map(b => b.category);
+    return [...new Set(categories)].map(cat => {
+      const count = categories.filter(b => b === cat).length;
+      return { name: cat, count };
+    });
+  } catch (e) {
+    return [];
+  }
 }
 
 // ===== MIDDLEWARE: Make auth available to all templates =====
-app.use((req, res, next) => {
-  const user = getUser(req);
-  res.locals.user = user;
-  res.locals.isLoggedIn = !!user;
-  res.locals.categories = getCategories();
+app.use(async (req, res, next) => {
+  try {
+    const user = await getUser(req);
+    res.locals.user = user;
+    res.locals.isLoggedIn = !!user;
+    res.locals.categories = await getCategories();
+  } catch (e) {
+    res.locals.user = null;
+    res.locals.isLoggedIn = false;
+    res.locals.categories = [];
+  }
   next();
 });
 
@@ -160,60 +100,117 @@ function requireAuth(req, res, next) {
 }
 
 // ===== ROUTES =====
-app.get('/', (req, res) => {
-  updateBooks();
-  res.locals.page = 'home';
-  res.render('index', {
-    books,
-    popular: books.slice(0, 8),
-    latest: shuffle(books).slice(0, 8),
-    featured: books.find(b => b.id === 9) || books[0]
-  });
+app.get('/', async (req, res) => {
+  try {
+    const { data: books, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('reads', { ascending: false });
+      
+    const popular = books ? books.slice(0, 8) : [];
+    const latest = books ? shuffle(books).slice(0, 8) : [];
+    const featured = books ? (books.find(b => b.id === 9) || books[0]) : null;
+    
+    res.locals.page = 'home';
+    res.render('index', {
+      books: books || [],
+      popular,
+      latest,
+      featured
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
+  }
 });
 
-app.get('/books', (req, res) => {
-  updateBooks();
+app.get('/books', async (req, res) => {
   res.locals.page = 'books';
-  let filtered = [...books];
   const q = req.query.q || '';
   const cat = req.query.category || '';
   const sort = req.query.sort || 'popular';
 
-  if (q) {
-    filtered = filtered.filter(b =>
-      b.title.toLowerCase().includes(q.toLowerCase()) ||
-      b.author.toLowerCase().includes(q.toLowerCase())
-    );
+  try {
+    let query = supabase.from('books').select('*');
+    if (cat) query = query.eq('category', cat);
+    if (q) query = query.or(`title.ilike.%${q}%,author.ilike.%${q}%`);
+
+    const { data: books, error } = await query;
+    let filtered = books ? [...books] : [];
+
+    if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+    else if (sort === 'az') filtered.sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+    else if (sort === 'newest') filtered.sort((a, b) => b.year - a.year);
+    else filtered.sort((a, b) => b.reads - a.reads);
+
+    res.render('books', { books: filtered, q, cat, sort });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
   }
-  if (cat) filtered = filtered.filter(b => b.category === cat);
-
-  if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
-  else if (sort === 'az') filtered.sort((a, b) => a.title.localeCompare(b.title, 'tr'));
-  else if (sort === 'newest') filtered.sort((a, b) => b.year - a.year);
-  else filtered.sort((a, b) => b.reads - a.reads);
-
-  res.render('books', { books: filtered, q, cat, sort });
 });
 
-app.get('/book/:slug', (req, res) => {
-  updateBooks();
-  updateChapters();
+app.get('/book/:slug', async (req, res) => {
   res.locals.page = 'book';
-  const book = books.find(b => b.slug === req.params.slug);
-  if (!book) return res.status(404).redirect('/books');
-  const similar = shuffle(books.filter(b => b.category === book.category && b.id !== book.id)).slice(0, 4);
-  const bookChapters = chapters[book.id] || [];
-  res.render('book-detail', { book, similar, bookChapters });
+  try {
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', req.params.slug)
+      .single();
+
+    if (error || !book) return res.status(404).redirect('/books');
+
+    const { data: similarBooks } = await supabase
+      .from('books')
+      .select('*')
+      .eq('category', book.category)
+      .neq('id', book.id);
+
+    const similar = similarBooks ? shuffle(similarBooks).slice(0, 4) : [];
+
+    const { data: bookChapters } = await supabase
+      .from('chapters')
+      .select('id, title, addedBy, addedAt')
+      .eq('bookId', book.id)
+      .order('id', { ascending: true });
+
+    res.render('book-detail', { book, similar, bookChapters: bookChapters || [] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
+  }
 });
 
-app.get('/read/:slug', (req, res) => {
-  updateBooks();
-  updateChapters();
+app.get('/read/:slug', async (req, res) => {
   res.locals.page = 'read';
-  const book = books.find(b => b.slug === req.params.slug);
-  if (!book) return res.status(404).redirect('/books');
-  const bookChapters = chapters[book.id] || [];
-  res.render('read', { book, bookChapters });
+  try {
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', req.params.slug)
+      .single();
+
+    if (error || !book) return res.status(404).redirect('/books');
+
+    // Increment reads asynchronously (fire & forget is fine)
+    supabase
+      .from('books')
+      .update({ reads: (book.reads || 0) + 1 })
+      .eq('id', book.id)
+      .then(() => {});
+
+    const { data: bookChapters } = await supabase
+      .from('chapters')
+      .select('*')
+      .eq('bookId', book.id)
+      .order('id', { ascending: true });
+
+    res.render('read', { book, bookChapters: bookChapters || [] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
+  }
 });
 
 // ===== AUTH =====
@@ -223,15 +220,26 @@ app.get('/login', (req, res) => {
   res.render('login', { error: null });
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === hashPassword(password));
-  if (!user) {
-    res.locals.page = 'auth';
-    return res.render('login', { error: 'Kullanıcı adı veya şifre hatalı.' });
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .eq('password', hashPassword(password))
+      .maybeSingle();
+
+    if (error || !user) {
+      res.locals.page = 'auth';
+      return res.render('login', { error: 'Kullanıcı adı veya şifre hatalı.' });
+    }
+    req.session.userId = user.id;
+    res.redirect('/');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
   }
-  req.session.userId = user.id;
-  res.redirect('/');
 });
 
 app.get('/register', (req, res) => {
@@ -240,7 +248,7 @@ app.get('/register', (req, res) => {
   res.render('register', { error: null });
 });
 
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
   const { username, password, password2 } = req.body;
   if (!username || !password) {
     res.locals.page = 'auth';
@@ -250,20 +258,36 @@ app.post('/register', (req, res) => {
     res.locals.page = 'auth';
     return res.render('register', { error: 'Şifreler eşleşmiyor.' });
   }
-  if (users.find(u => u.username === username)) {
+
+  try {
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (existingUser) {
+      res.locals.page = 'auth';
+      return res.render('register', { error: 'Bu kullanıcı adı zaten kullanılıyor.' });
+    }
+
+    const newUser = {
+      id: generateId(),
+      username,
+      password: hashPassword(password),
+      createdAt: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from('users').insert(newUser);
+    if (error) throw error;
+
+    req.session.userId = newUser.id;
+    res.redirect('/');
+  } catch (e) {
+    console.error(e);
     res.locals.page = 'auth';
-    return res.render('register', { error: 'Bu kullanıcı adı zaten kullanılıyor.' });
+    return res.render('register', { error: 'Kayıt işlemi başarısız: ' + e.message });
   }
-  const newUser = {
-    id: generateId(),
-    username,
-    password: hashPassword(password),
-    createdAt: new Date().toISOString()
-  };
-  users.push(newUser);
-  saveUsers(users);
-  req.session.userId = newUser.id;
-  res.redirect('/');
 });
 
 app.get('/logout', (req, res) => {
@@ -272,15 +296,23 @@ app.get('/logout', (req, res) => {
 });
 
 // ===== PROFILE =====
-app.get('/profile', requireAuth, (req, res) => {
-  updateBooks();
+app.get('/profile', requireAuth, async (req, res) => {
   res.locals.page = 'profile';
-  const user = getUser(req);
-  const userBooks = books.filter(b => b.addedBy === user.id);
-  res.render('profile', { userBooks });
+  try {
+    const user = res.locals.user;
+    const { data: userBooks } = await supabase
+      .from('books')
+      .select('*')
+      .eq('addedBy', user.id);
+
+    res.render('profile', { userBooks: userBooks || [] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Profil yüklenemedi.');
+  }
 });
 
-// ===== ADD BOOK =====
+// ===== ADD BOOK PAGE =====
 app.get('/add-book', requireAuth, (req, res) => {
   res.locals.page = 'add-book';
   res.render('add-book', { error: null });
@@ -292,19 +324,34 @@ app.post('/add-book/parse', requireAuth, upload.single('bookFile'), async (req, 
     if (!req.file) {
       return res.status(400).json({ error: 'Lütfen bir PDF veya EPUB dosyası seçin.' });
     }
-    
+
     const { extractBook } = require('./lib/extract');
     const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
-    const filename = req.file.filename;
-    const filePath = req.file.path;
     
-    const parsed = await extractBook(filePath, ext);
-    
-    // Guess title from filename as fallback
+    // Parse directly from memory buffer
+    const parsed = await extractBook(req.file.buffer, ext);
+
+    // Upload to Supabase Storage
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('books')
+      .upload(uniqueName, req.file.buffer, {
+        contentType: req.file.mimetype,
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('books')
+      .getPublicUrl(uniqueName);
+
     const titleFallback = path.basename(req.file.originalname, path.extname(req.file.originalname))
       .replace(/[-_]/g, ' ')
       .trim();
-      
+
     res.json({
       success: true,
       metadata: {
@@ -314,8 +361,8 @@ app.post('/add-book/parse', requireAuth, upload.single('bookFile'), async (req, 
         pages: parsed.pageCount || 0
       },
       file: {
-        filename: filename,
-        path: '/books/' + filename,
+        filename: uniqueName,
+        path: publicUrl,
         type: ext
       }
     });
@@ -328,19 +375,16 @@ app.post('/add-book/parse', requireAuth, upload.single('bookFile'), async (req, 
 // ===== SAVE BOOK =====
 app.post('/add-book', requireAuth, async (req, res) => {
   const { title, author, category, year, pages, desc, color, filePath, fileType } = req.body;
-  
+
   if (!title || !author || !category || !year || !filePath || !fileType) {
     res.locals.page = 'add-book';
     return res.render('add-book', { error: 'Zorunlu alanları doldurun.' });
   }
-  
+
   try {
-    updateBooks();
-    updateChapters();
-    
     const bookId = generateId();
     const bookSlug = slugify(title);
-    
+
     const newBook = {
       id: bookId,
       slug: bookSlug,
@@ -359,32 +403,58 @@ app.post('/add-book', requireAuth, async (req, res) => {
       pdfFile: fileType === 'pdf' ? filePath : null,
       epubFile: fileType === 'epub' ? filePath : null
     };
-    
-    if (books.find(b => b.slug === newBook.slug)) {
+
+    // Check slug collision
+    const { data: existingBook } = await supabase
+      .from('books')
+      .select('id')
+      .eq('slug', newBook.slug)
+      .maybeSingle();
+
+    if (existingBook) {
       newBook.slug = `${newBook.slug}-${newBook.id}`;
     }
-    
-    const fullFilePath = path.join(uploadsDir, path.basename(filePath));
+
+    // Download file buffer from Supabase Storage to parse chapters
+    const uniqueName = path.basename(filePath);
+    const { data: fileBlob, error: downloadError } = await supabase.storage
+      .from('books')
+      .download(uniqueName);
+
+    if (downloadError) throw downloadError;
+    const buffer = Buffer.from(await fileBlob.arrayBuffer());
+
     const { extractBook } = require('./lib/extract');
-    const parsed = await extractBook(fullFilePath, fileType);
-    
+    const parsed = await extractBook(buffer, fileType);
+
     const bookChapters = (parsed.pages || []).map((pageText, index) => ({
       id: generateId() + index,
+      bookId: bookId,
       title: `Sayfa ${index + 1}`,
       content: pageText,
       addedBy: req.session.userId,
       addedAt: new Date().toISOString()
     }));
-    
+
     newBook.chapters = bookChapters.map(c => c.title);
     newBook.pages = bookChapters.length || newBook.pages;
-    
-    books.push(newBook);
-    saveBooks(books);
-    
-    chapters[bookId] = bookChapters;
-    saveChapters(chapters);
-    
+
+    // Insert Book
+    const { error: bookInsertError } = await supabase
+      .from('books')
+      .insert(newBook);
+
+    if (bookInsertError) throw bookInsertError;
+
+    // Insert Chapters bulk
+    if (bookChapters.length > 0) {
+      const { error: chaptersInsertError } = await supabase
+        .from('chapters')
+        .insert(bookChapters);
+
+      if (chaptersInsertError) throw chaptersInsertError;
+    }
+
     res.redirect(`/book/${newBook.slug}`);
   } catch (err) {
     console.error("Kitap ekleme hatası:", err);
@@ -394,47 +464,34 @@ app.post('/add-book', requireAuth, async (req, res) => {
 });
 
 // ===== DELETE BOOK =====
-app.post('/book/:slug/delete', requireAuth, (req, res) => {
+app.post('/book/:slug/delete', requireAuth, async (req, res) => {
   try {
-    updateBooks();
-    updateChapters();
-    
-    const bookIndex = books.findIndex(b => b.slug === req.params.slug);
-    if (bookIndex === -1) {
-      return res.status(404).send('Kitap bulunamadı.');
-    }
-    
-    const book = books[bookIndex];
-    
-    // Auth check: only owner (or if no owner, any logged in user can delete for seeded books)
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', req.params.slug)
+      .single();
+
+    if (error || !book) return res.status(404).send('Kitap bulunamadı.');
+
     if (book.addedBy && book.addedBy !== req.session.userId) {
       return res.status(403).send('Bu kitabı silmeye yetkiniz yok.');
     }
-    
-    // Delete files
-    if (book.pdfFile) {
-      const pdfPath = path.join(uploadsDir, path.basename(book.pdfFile));
-      if (fs.existsSync(pdfPath)) {
-        try { fs.unlinkSync(pdfPath); } catch (e) { console.error("PDF silinemedi:", e); }
-      }
+
+    // Delete from Supabase Storage
+    const fileUrl = book.pdfFile || book.epubFile;
+    if (fileUrl) {
+      const filename = path.basename(fileUrl);
+      await supabase.storage.from('books').remove([filename]);
     }
-    if (book.epubFile) {
-      const epubPath = path.join(uploadsDir, path.basename(book.epubFile));
-      if (fs.existsSync(epubPath)) {
-        try { fs.unlinkSync(epubPath); } catch (e) { console.error("EPUB silinemedi:", e); }
-      }
-    }
-    
-    // Remove chapters
-    if (chapters[book.id]) {
-      delete chapters[book.id];
-      saveChapters(chapters);
-    }
-    
-    // Remove book
-    books.splice(bookIndex, 1);
-    saveBooks(books);
-    
+
+    // Delete chapters explicitly (cascade also handles)
+    await supabase.from('chapters').delete().eq('bookId', book.id);
+
+    // Delete book record
+    const { error: deleteError } = await supabase.from('books').delete().eq('id', book.id);
+    if (deleteError) throw deleteError;
+
     res.redirect('/profile');
   } catch (err) {
     console.error("Kitap silme hatası:", err);
@@ -443,77 +500,112 @@ app.post('/book/:slug/delete', requireAuth, (req, res) => {
 });
 
 // ===== ADD CHAPTER =====
-app.post('/book/:slug/add-chapter', requireAuth, (req, res) => {
-  updateBooks();
-  updateChapters();
-  const book = books.find(b => b.slug === req.params.slug);
-  if (!book) return res.status(404).redirect('/books');
+app.post('/book/:slug/add-chapter', requireAuth, async (req, res) => {
+  try {
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', req.params.slug)
+      .single();
 
-  const { chapterTitle, chapterContent } = req.body;
-  if (!chapterTitle || !chapterContent) {
-    return res.redirect(`/book/${book.slug}`);
+    if (error || !book) return res.status(404).redirect('/books');
+
+    const { chapterTitle, chapterContent } = req.body;
+    if (!chapterTitle || !chapterContent) {
+      return res.redirect(`/book/${book.slug}`);
+    }
+
+    const newChapter = {
+      id: generateId(),
+      bookId: book.id,
+      title: chapterTitle.trim(),
+      content: chapterContent.trim(),
+      addedBy: req.session.userId,
+      addedAt: new Date().toISOString()
+    };
+
+    const { error: insertError } = await supabase.from('chapters').insert(newChapter);
+    if (insertError) throw insertError;
+
+    const currentChapters = book.chapters || [];
+    currentChapters.push(chapterTitle.trim());
+
+    await supabase.from('books').update({ chapters: currentChapters }).eq('id', book.id);
+
+    res.redirect(`/book/${book.slug}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Bölüm eklenemedi.');
   }
-
-  if (!chapters[book.id]) chapters[book.id] = [];
-  chapters[book.id].push({
-    id: generateId(),
-    title: chapterTitle.trim(),
-    content: chapterContent.trim(),
-    addedBy: req.session.userId,
-    addedAt: new Date().toISOString()
-  });
-  saveChapters(chapters);
-  res.redirect(`/book/${book.slug}`);
 });
 
 // ===== DOWNLOADS =====
-app.get('/download/:slug/:format', (req, res) => {
-  updateBooks();
-  const book = books.find(b => b.slug === req.params.slug);
-  if (!book) return res.status(404).send('Kitap bulunamadı.');
+app.get('/download/:slug/:format', async (req, res) => {
+  try {
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('slug', req.params.slug)
+      .single();
 
-  const format = req.params.format;
-  const fileField = format === 'pdf' ? 'pdfFile' : 'epubFile';
+    if (error || !book) return res.status(404).send('Kitap bulunamadı.');
 
-  if (book[fileField]) {
-    const filePath = path.join(uploadsDir, path.basename(book[fileField]));
-    if (fs.existsSync(filePath)) {
-      const filename = `${book.slug}.${format === 'epub' ? 'epub' : 'pdf'}`;
-      const mimeType = format === 'epub' ? 'application/epub+zip' : 'application/pdf';
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Content-Type', mimeType);
-      return res.sendFile(filePath);
+    const format = req.params.format;
+    const fileField = format === 'pdf' ? 'pdfFile' : 'epubFile';
+
+    if (book[fileField]) {
+      // Increment downloads asynchronously
+      supabase
+        .from('books')
+        .update({ downloads: (book.downloads || 0) + 1 })
+        .eq('id', book.id)
+        .then(() => {});
+        
+      // Redirect directly to Supabase storage URL to download the file
+      return res.redirect(book[fileField]);
     }
-  }
 
-  // Fallback: generate text from chapters
-  updateChapters();
-  const bookChapters = chapters[book.id] || [];
-  let content = `${book.title}\n${book.author}\n\n${book.desc}\n\n`;
-  if (bookChapters.length) {
-    bookChapters.forEach((ch, i) => {
-      content += `\n--- ${ch.title} ---\n\n${ch.content}\n\n`;
-    });
-  } else {
-    content += '\n[Henüz bölüm içeriği eklenmemiş.]\n';
-  }
+    // Fallback: generate text from chapters
+    const { data: bookChapters } = await supabase
+      .from('chapters')
+      .select('*')
+      .eq('bookId', book.id)
+      .order('id', { ascending: true });
 
-  const filename = `${book.slug}.txt`;
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.setHeader('Content-Type', 'text/plain');
-  res.send(content);
+    let content = `${book.title}\n${book.author}\n\n${book.desc}\n\n`;
+    if (bookChapters && bookChapters.length) {
+      bookChapters.forEach((ch, i) => {
+        content += `\n--- ${ch.title} ---\n\n${ch.content}\n\n`;
+      });
+    } else {
+      content += '\n[Henüz bölüm içeriği eklenmemiş.]\n';
+    }
+
+    const filename = `${book.slug}.txt`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(content);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Sunucu hatası.');
+  }
 });
 
 // ===== API =====
-app.get('/api/search', (req, res) => {
-  updateBooks();
+app.get('/api/search', async (req, res) => {
   const q = (req.query.q || '').toLowerCase();
   if (!q) return res.json([]);
-  const results = books.filter(b =>
-    b.title.toLowerCase().includes(q) ||
-    b.author.toLowerCase().includes(q)
-  ).slice(0, 8);
-  res.json(results);
+  try {
+    const { data: results } = await supabase
+      .from('books')
+      .select('*')
+      .or(`title.ilike.%${q}%,author.ilike.%${q}%`)
+      .limit(8);
+
+    res.json(results || []);
+  } catch (e) {
+    res.json([]);
+  }
 });
 
 app.listen(PORT, () => {
